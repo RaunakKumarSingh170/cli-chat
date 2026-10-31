@@ -1,10 +1,15 @@
-//hi
+const readline = require('readline');
 require('dotenv').config();
 
 const API_KEY = process.env.GROQ_API_KEY;
 const URL = "https://api.groq.com/openai/v1/chat/completions";
+const messages = [];
 
 async function askAI(prompt) {
+  messages.push({
+    role: "user",
+    content: prompt
+  });
   const response = await fetch(URL, {
     method: "POST",
     headers: {
@@ -13,17 +18,23 @@ async function askAI(prompt) {
     },
     body: JSON.stringify({
       model: "openai/gpt-oss-120b",
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
+      messages: messages
     })
   });
 
   const data = await response.json();
-  console.log(data.choices[0].message.content);
+  const reply = data.choices[0].message.content;
+  messages.push({
+    role: "assistant",
+    content: reply
+  });
+  console.log(reply);
 }
 
-askAI(process.argv[2]);
+const r1 = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+r1.on("line",async (input) => {
+  await askAI(input);
+});
